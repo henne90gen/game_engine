@@ -53,7 +53,9 @@ class Window(pyglet.window.Window):
         self.frame_start_time = datetime.now()
 
         self.clear()
+
         self.data.frame_time = frame_time
+        self.data.projection_matrix = self.projection_matrix
         self.game.update(self.data)
         self.game.render(self.data)
 

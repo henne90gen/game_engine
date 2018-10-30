@@ -1,11 +1,13 @@
-from game_engine.math import vec2
+from collections import defaultdict
+
+from game_engine.math import vec2, identity
 
 
 class BaseGame:
-    def update(delta: float):
+    def update(self, delta: float):
         pass
 
-    def render(delta: float):
+    def render(self, delta: float):
         pass
 
 
@@ -14,7 +16,8 @@ class BaseData:
         self.frame_time = 0
         self.mouse_position = vec2()
         self.mouse_movement = vec2()
-        self.key_map = {}
+        self.key_map = defaultdict(lambda: False)
+        self.projection_matrix = identity()
 
     def __repr__(self):
         result = "[BaseData "

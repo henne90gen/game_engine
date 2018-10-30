@@ -138,7 +138,7 @@ class Shader:
         # this program must be currently bound
         # check there are 1-4 values
         if len(vals) in range(1, 5):
-            vals = list(map(c_float, vals))
+            c_vals = list(map(c_float, vals))
             # location = glGetUniformLocation(
             #     self.handle, c_char_p(name.encode("utf-8")))
             location = glGetUniformLocation(
@@ -150,20 +150,20 @@ class Shader:
                 3: glUniform3f,
                 4: glUniform4f
             }
-            uniform_functions[len(vals)](location, *vals)
+            uniform_functions[len(c_vals)](location, *c_vals)
 
     def uniformi(self, name: str, *vals):
         # upload an integer uniform
         # this program must be currently bound
         # check there are 1-4 values
         if len(vals) in range(1, 5):
-            vals = list(map(c_int, vals))
+            c_vals = list(map(c_int, vals))
             # select the correct function
             location = glGetUniformLocation(
                 self.handle, c_char_p(name.encode("utf-8")))
             uniform_functions = {1: glUniform1i,
                                  2: glUniform2i, 3: glUniform3i, 4: glUniform4i}
-            uniform_functions[len(vals)](location, *vals)
+            uniform_functions[len(c_vals)](location, *c_vals)
 
     def uniform_matrixf(self, name: str, mat: mat4):
         # upload a uniform matrix
