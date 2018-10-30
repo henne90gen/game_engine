@@ -9,6 +9,7 @@ mccabe==0.6.1
 mypy==0.641
 mypy-extensions==0.4.1
 numpy==1.15.3
+opencv-python==3.4.3.18
 pycodestyle==2.4.0
 pyflakes==2.0.0
 pyglet==1.4.0b1
