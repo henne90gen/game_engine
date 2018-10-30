@@ -4,7 +4,8 @@ import game_engine.window
 import game_engine.game
 from game_engine.camera import Camera
 from game_engine.shader import Shader
-from game_engine.vertex_objects import VAO, VBO, VertexAttribute, Uniform, draw
+from game_engine.vertex_objects import VAO, VBO, VertexAttribute, Uniform
+from game_engine.renderer import draw
 from game_engine.math import vec3, identity, scale, translate, rotate
 import logging
 LOG = logging.getLogger()
