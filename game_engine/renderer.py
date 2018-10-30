@@ -1,3 +1,11 @@
+from typing import List
+
+from pyglet.gl import glDrawArrays, GL_TRIANGLES
+
+from game_engine.vertex_objects import VAO, VBO, VertexAttribute, Uniform
+from game_engine.shader import Shader
+
+
 def draw(vao: VAO, vbo: VBO, vertex_attributes: List[VertexAttribute], uniforms: List[Uniform], shader: Shader):
     shader.bind()
     vao.bind()
