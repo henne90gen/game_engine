@@ -3,3 +3,4 @@ env/
 dist/
 game_engine.egg-info/
 build/
+__pycache__/
