@@ -54,7 +54,7 @@ class Shader:
         shader = glCreateShader(t)
 
         string_buffers = [
-            self.create_string_buffer(bytes(s, "utf-8")) for s in strings]
+            create_string_buffer(bytes(s, "utf-8")) for s in strings]
         src = (c_char_p * count)(*map(addressof, string_buffers))
         glShaderSource(shader, count, cast(
             pointer(src), POINTER(POINTER(c_char))), None)
@@ -139,11 +139,17 @@ class Shader:
         # check there are 1-4 values
         if len(vals) in range(1, 5):
             vals = list(map(c_float, vals))
+            # location = glGetUniformLocation(
+            #     self.handle, c_char_p(name.encode("utf-8")))
             location = glGetUniformLocation(
-                self.handle, c_char_p(name.encode("utf-8")))
+                self.handle, bytes(name, "utf-8"))
             # select the correct function
-            uniform_functions = {1: glUniform1f,
-                                 2: glUniform2f, 3: glUniform3f, 4: glUniform4f}
+            uniform_functions = {
+                1: glUniform1f,
+                2: glUniform2f,
+                3: glUniform3f,
+                4: glUniform4f
+            }
             uniform_functions[len(vals)](location, *vals)
 
     def uniformi(self, name: str, *vals):
@@ -170,6 +176,3 @@ class Shader:
         mat_values = mat.to_list()
         # noinspection PyCallingNonCallable, PyTypeChecker
         glUniformMatrix4fv(location, 1, True, (c_float * 16)(*mat_values))
-
-    def process_and_convert_to_string_buffer(self, s: str):
-        return create_string_buffer(bytes(s, "utf-8"))

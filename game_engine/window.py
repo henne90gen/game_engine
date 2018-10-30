@@ -105,7 +105,7 @@ class Window(pyglet.window.Window):
         self.data.mouse_position = vec2(x, y)
 
 
-def window(name: str, game: BaseGame, data: BaseData):
+def run_game(name: str, game: BaseGame, data: BaseData):
     window = Window(name=name, width=1280, height=720,
                     resizable=True, game=game, data=data)
 
