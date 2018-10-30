@@ -4,7 +4,8 @@ import game_engine.window
 import game_engine.game
 from game_engine.camera import Camera
 from game_engine.shader import Shader
-from game_engine.vertex_objects import VAO, VBO, VertexAttribute, Uniform
+from game_engine.vertex_objects import VAO, array_buffer, VertexAttribute, Uniform
+from game_engine.asset import Mesh
 from game_engine.renderer import draw
 from game_engine.math import vec3, identity, scale, translate, rotate
 import logging
@@ -19,28 +20,29 @@ class Game(game_engine.game.BaseGame):
     def render(self, data: game_engine.game.BaseData):
         LOG.info("Rendering", data)
         triangles = [
-            (VBO(GL_ARRAY_BUFFER, 2, [10, 10, 0, -10, -10, 0, 10, -10, 0]),
-             VertexAttribute(0, 'a_Position', 3, 0),
-             Uniform("u_Color", vec3(1.0, 0.0, 0.0))),
-            (VBO(GL_ARRAY_BUFFER, 2, [10, 10, 0, -10, 10, 0, -10, -10, 0]),
-             VertexAttribute(0, 'a_Position', 3, 0),
-             Uniform("u_Color", vec3(0.0, 1.0, 0.0))),
-            (VBO(GL_ARRAY_BUFFER, 2, [10, 10, 0, -10, 20, -5, -10, 10, 0]),
-             VertexAttribute(0, 'a_Position', 3, 0),
-             Uniform("u_Color", vec3(0.0, 0.0, 1.0))),
-            (VBO(GL_ARRAY_BUFFER, 2, [-10, -10, 0, -10, 10, 0, -10, 20, -5]),
-             VertexAttribute(0, 'a_Position', 3, 0),
-             Uniform("u_Color", vec3(1.0, 0.0, 1.0))),
+            Mesh([array_buffer([10, 10, 0, -10, -10, 0, 10, -10, 0])],
+                  [VertexAttribute('a_Position', 3, 0)],
+                  [Uniform("u_Color", vec3(1.0, 0.0, 0.0)), Uniform("u_Model", identity())]),
+            Mesh([array_buffer([10, 10, 0, -10, 10, 0, -10, -10, 0])],
+                  [VertexAttribute('a_Position', 3, 0)],
+                  [Uniform("u_Color", vec3(0.0, 1.0, 0.0)), Uniform("u_Model", identity())]),
+            Mesh([array_buffer([10, 10, 0, -10, 20, -5, -10, 10, 0])],
+                  [VertexAttribute('a_Position', 3, 0)],
+                  [Uniform("u_Color", vec3(0.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
+            Mesh([array_buffer([-10, -10, 0, -10, 10, 0, -10, 20, -5])],
+                  [VertexAttribute('a_Position', 3, 0)],
+                  [Uniform("u_Color", vec3(1.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
         ]
+
         vao = VAO()
         shader = Shader("sandbox/shader.vert", "sandbox/shader.frag")
         projection = Uniform("u_Projection", data.projection_matrix)
         view = Uniform("u_View", data.camera.get_view_matrix())
-        model = Uniform("u_Model", identity())
 
-        for vbo, attrib, color in triangles:
-            uniforms = [color, projection, view, model]
-            draw(vao, vbo, [attrib], uniforms, shader)
+        for triangle in triangles:
+            uniforms = [projection, view] + triangle.uniforms
+            draw(vao, triangle.vbos[0],
+                 triangle.vertex_attributes, uniforms, shader)
 
 
 class Data(game_engine.game.BaseData):

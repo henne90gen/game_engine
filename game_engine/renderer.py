@@ -14,8 +14,8 @@ def draw(vao: VAO, vbo: VBO, vertex_attributes: List[VertexAttribute], uniforms:
     for uniform in uniforms:
         uniform.bind(shader)
 
-    for attrib in vertex_attributes:
-        attrib.bind(shader)
+    for index, attrib in enumerate(vertex_attributes):
+        attrib.bind(index, shader)
 
     glDrawArrays(GL_TRIANGLES, 0, len(vbo))
 
