@@ -5,7 +5,7 @@ import game_engine.game
 from game_engine.camera import Camera
 from game_engine.shader import Shader
 from game_engine.vertex_objects import VAO, array_buffer, VertexAttribute, Uniform
-from game_engine.asset import Mesh
+from game_engine.asset import Mesh, load_image
 from game_engine.renderer import draw
 from game_engine.math import vec3, identity, scale, translate, rotate
 import logging
@@ -13,6 +13,10 @@ LOG = logging.getLogger()
 
 
 class Game(game_engine.game.BaseGame):
+    def __init__(self):
+        super().__init__()
+        self.texture = load_image("sandbox/kitten.jpg")
+
     def update(self, data: game_engine.game.BaseData):
         LOG.info("Updating", data)
         data.camera.update(data)
@@ -42,7 +46,7 @@ class Game(game_engine.game.BaseGame):
         for triangle in triangles:
             uniforms = [projection, view] + triangle.uniforms
             draw(vao, triangle.vbos[0],
-                 triangle.vertex_attributes, uniforms, shader)
+                 triangle.vertex_attributes, uniforms, shader, self.texture)
 
 
 class Data(game_engine.game.BaseData):
