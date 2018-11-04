@@ -5,11 +5,32 @@ import game_engine.game
 from game_engine.camera import Camera
 from game_engine.shader import Shader
 from game_engine.vertex_objects import VAO, array_buffer, VertexAttribute, Uniform
-from game_engine.asset import Mesh, load_image
-from game_engine.renderer import draw
-from game_engine.math import vec3, identity, scale, translate, rotate
+from game_engine.asset import TextureMeshSurface, ColorMeshSurface, load_image
+from game_engine.math import vec3, vec2, identity, scale, translate, rotate
 import logging
 LOG = logging.getLogger()
+
+
+def to_vec_arr(arr, vector_size):
+    result = []
+    for i in range(0, len(arr), vector_size):
+        if vector_size == 2:
+            new_vector = vec2(arr[i], arr[i+1])
+        elif vector_size == 3:
+            new_vector = vec3(arr[i], arr[i+1], arr[i+2])
+        else:
+            print("Unsupported vector size")
+            return []
+        result.append(new_vector)
+    return result
+
+
+def to_vec3_arr(arr):
+    return to_vec_arr(arr, 3)
+
+
+def to_vec2_arr(arr):
+    return to_vec_arr(arr, 2)
 
 
 class Game(game_engine.game.BaseGame):
@@ -23,49 +44,40 @@ class Game(game_engine.game.BaseGame):
 
     def render(self, data: game_engine.game.BaseData):
         LOG.info("Rendering", data)
-        triangles = [
-            Mesh([array_buffer([10, 10, 0, -10, 20, -5, -10, 10, 0])],
-                 [VertexAttribute('a_Position', 3, 3, 0)],
-                 [Uniform("u_Color", vec3(0.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
-            Mesh([array_buffer([-10, -10, 0, -10, 10, 0, -10, 20, -5])],
-                 [VertexAttribute('a_Position', 3, 3, 0)],
-                 [Uniform("u_Color", vec3(1.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
+
+        points = to_vec3_arr([
+            10, 10, 0,
+            -10, -10, 0,
+            10, -10, 0,
+            10, 10, 0,
+            -10, 10, 0,
+            -10, -10, 0,
+        ])
+        uvs = to_vec2_arr([
+            1, 1,
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1,
+            0, 0,
+        ])
+
+        surfaces = [
+            ColorMeshSurface(
+                to_vec3_arr([10, 10, 0, -10, 20, -5, -10, 10,
+                             0, -10, -10, 0, -10, 10, 0, -10, 20, -5]),
+                to_vec3_arr(
+                    [1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1])
+            ),
+            TextureMeshSurface(points, uvs, self.texture),
         ]
 
-        vao = VAO()
-        shader = Shader("sandbox/triangle.vert", "sandbox/triangle.frag")
         projection = Uniform("u_Projection", data.projection_matrix)
         view = Uniform("u_View", data.camera.get_view_matrix())
 
-        for triangle in triangles:
-            uniforms = [projection, view] + triangle.uniforms
-            draw(vao, triangle.vbos[0],
-                 triangle.vertex_attributes, uniforms, shader, self.texture)
-
-        triangles = [
-            Mesh([array_buffer(
-                list(map(float, [
-                    10, 10, 0, 1, 1,
-                    -10, -10, 0, 0, 0,
-                    10, -10, 0, 1, 0,
-                    10, 10, 0, 1, 1,
-                    -10, 10, 0, 0, 1,
-                    -10, -10, 0, 0, 0,
-                ])), 5)],
-                [VertexAttribute('a_Position', 3, 5, 0),
-                 VertexAttribute('a_UV', 2, 5, 3)],
-                [Uniform("u_TextureSampler", 0), Uniform("u_Model", identity())]),
-        ]
-
-        vao = VAO()
-        shader = Shader("sandbox/shader.vert", "sandbox/shader.frag")
-        projection = Uniform("u_Projection", data.projection_matrix)
-        view = Uniform("u_View", data.camera.get_view_matrix())
-
-        for triangle in triangles:
-            uniforms = [projection, view] + triangle.uniforms
-            draw(vao, triangle.vbos[0],
-                 triangle.vertex_attributes, uniforms, shader, self.texture)
+        for surface in surfaces:
+            uniforms = [projection, view]
+            surface.draw(uniforms)
 
 
 class Data(game_engine.game.BaseData):

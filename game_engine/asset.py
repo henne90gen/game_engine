@@ -1,14 +1,16 @@
 import logging
+import os, inspect
 from typing import List
 
 import cv2
 import numpy as np
 from pyglet.gl import glGenTextures, glBindTexture, glTexParameterf, glTexImage2D, GLuint, GL_BGR, GL_RGB, GL_UNSIGNED_BYTE, GL_BYTE
-from pyglet.gl import GL_RGBA, GL_RGB8, glFlush
+from pyglet.gl import GL_RGBA, GL_RGB8, glFlush, glDrawArrays, GL_TRIANGLES
 from pyglet.gl import GL_TEXTURE_2D, glActiveTexture, GL_TEXTURE0, GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER, GL_LINEAR, GLubyte
 
-from game_engine.vertex_objects import VBO, VertexAttribute, Uniform
-
+from game_engine.shader import Shader
+from game_engine.vertex_objects import VBO, VAO, VertexAttribute, Uniform, array_buffer
+from game_engine.math import vec3, vec2, identity
 
 LOG = logging.getLogger()
 
@@ -55,8 +57,78 @@ def load_image(file_name: str):
     return Texture(img, GL_BGR, GL_UNSIGNED_BYTE)
 
 
-class Mesh:
-    def __init__(self, vbos: List[VBO], vertex_attributes: List[VertexAttribute], uniforms: List[Uniform]):
-        self.vbos = vbos
+TEXTURE_MESH_SHADER = None
+COLOR_MESH_SHADER = None
+
+
+class MeshSurface:
+    def __init__(self, vertex_attributes: List[VertexAttribute], uniforms: List[Uniform]):
         self.vertex_attributes = vertex_attributes
         self.uniforms = uniforms
+        self.vao = VAO()
+
+    def draw(self, additional_uniforms):
+        self.shader.bind()
+        self.vao.bind()
+        self.vertex_buffer.bind()
+
+        for uniform in self.uniforms + additional_uniforms:
+            uniform.bind(self.shader)
+
+        for index, attrib in enumerate(self.vertex_attributes):
+            attrib.bind(index, self.shader)
+
+        glDrawArrays(GL_TRIANGLES, 0, len(self.vertex_buffer))
+
+        self.vertex_buffer.unbind()
+        self.vao.unbind()
+        self.shader.unbind()
+
+
+class ColorMeshSurface(MeshSurface):
+    def __init__(self, points: List[vec3], colors: List[vec3]):
+        attributes = [VertexAttribute('a_Position', 3, 6, 0),
+                      VertexAttribute('a_Color', 3, 6, 3)]
+        uniforms = [Uniform("u_Model", identity())]
+        super().__init__(attributes, uniforms)
+        data = []
+        for point, color in zip(points, colors):
+            data += point.to_list()
+            data += color.to_list()
+        self.vertex_buffer = array_buffer(data, 6)
+
+        global COLOR_MESH_SHADER
+        if COLOR_MESH_SHADER is None:
+            dir_name = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            COLOR_MESH_SHADER = Shader(
+                "game_engine/color.vert", "game_engine/color.frag")
+            LOG.info("Loaded color mesh shader")
+        self.shader = COLOR_MESH_SHADER
+
+
+class TextureMeshSurface(MeshSurface):
+    def __init__(self, points: List[vec3], uvs: List[vec2], texture: Texture):
+        attributes = [VertexAttribute('a_Position', 3, 5, 0),
+                      VertexAttribute('a_UV', 2, 5, 3)]
+        uniforms = [Uniform("u_TextureSampler", 0),
+                    Uniform("u_Model", identity())]
+        super().__init__(attributes, uniforms)
+        data = []
+        for point, uv in zip(points, uvs):
+            data += point.to_list()
+            data += uv.to_list()
+        self.vertex_buffer = array_buffer(data, 5)
+        self.texture = texture
+
+        global TEXTURE_MESH_SHADER
+        if TEXTURE_MESH_SHADER is None:
+            dir_name = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            TEXTURE_MESH_SHADER = Shader(
+                f"{dir_name}/texture.vert", f"{dir_name}/texture.frag")
+            LOG.info("Loaded texture mesh shader")
+        self.shader = TEXTURE_MESH_SHADER
+
+    def draw(self, additional_uniforms):
+        self.texture.bind()
+        super().draw(additional_uniforms)
+        self.texture.unbind()

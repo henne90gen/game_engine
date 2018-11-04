@@ -70,11 +70,11 @@ class VertexAttribute:
     def bind(self, location: int, shader: Shader):
         stride = self.stride * sizeof(GLfloat)
         offset = self.offset * sizeof(GLfloat)
-        glEnableVertexAttribArray(location)
         glVertexAttribPointer(location, self.vertex_size,
                               GL_FLOAT, GL_FALSE, stride, offset)
         glBindAttribLocation(shader.handle, location,
                              bytes(self.name, "utf-8"))
+        glEnableVertexAttribArray(location)
 
 
 class Uniform:
