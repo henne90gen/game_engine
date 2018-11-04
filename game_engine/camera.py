@@ -27,13 +27,15 @@ class Camera:
         elif data.key_map[key.UP] and not data.key_map[key.DOWN]:
             move.y = 1
 
-        speed = 0.5
-        self.position.x += move.x * speed
-        self.position.y += move.y * speed
+        move_speed = 0.5
+        self.position.x += move.x * move_speed
+        self.position.y += move.y * move_speed
 
         horizontal_rotation = 0
         if data.key_map[key.Q] and not data.key_map[key.E]:
             horizontal_rotation = -1
         elif data.key_map[key.E] and not data.key_map[key.Q]:
             horizontal_rotation = 1
-        self.rotation.y += horizontal_rotation * speed
+
+        rotation_speed = 1
+        self.rotation.y += horizontal_rotation * rotation_speed

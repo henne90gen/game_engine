@@ -15,7 +15,7 @@ LOG = logging.getLogger()
 class Game(game_engine.game.BaseGame):
     def __init__(self):
         super().__init__()
-        self.texture = load_image("sandbox/kitten.jpg")
+        self.texture = load_image("sandbox/cat.jpg")
 
     def update(self, data: game_engine.game.BaseData):
         LOG.info("Updating", data)
@@ -24,18 +24,37 @@ class Game(game_engine.game.BaseGame):
     def render(self, data: game_engine.game.BaseData):
         LOG.info("Rendering", data)
         triangles = [
-            Mesh([array_buffer([10, 10, 0, -10, -10, 0, 10, -10, 0])],
-                  [VertexAttribute('a_Position', 3, 0)],
-                  [Uniform("u_Color", vec3(1.0, 0.0, 0.0)), Uniform("u_Model", identity())]),
-            Mesh([array_buffer([10, 10, 0, -10, 10, 0, -10, -10, 0])],
-                  [VertexAttribute('a_Position', 3, 0)],
-                  [Uniform("u_Color", vec3(0.0, 1.0, 0.0)), Uniform("u_Model", identity())]),
             Mesh([array_buffer([10, 10, 0, -10, 20, -5, -10, 10, 0])],
-                  [VertexAttribute('a_Position', 3, 0)],
-                  [Uniform("u_Color", vec3(0.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
+                 [VertexAttribute('a_Position', 3, 3, 0)],
+                 [Uniform("u_Color", vec3(0.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
             Mesh([array_buffer([-10, -10, 0, -10, 10, 0, -10, 20, -5])],
-                  [VertexAttribute('a_Position', 3, 0)],
-                  [Uniform("u_Color", vec3(1.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
+                 [VertexAttribute('a_Position', 3, 3, 0)],
+                 [Uniform("u_Color", vec3(1.0, 0.0, 1.0)), Uniform("u_Model", identity())]),
+        ]
+
+        vao = VAO()
+        shader = Shader("sandbox/triangle.vert", "sandbox/triangle.frag")
+        projection = Uniform("u_Projection", data.projection_matrix)
+        view = Uniform("u_View", data.camera.get_view_matrix())
+
+        for triangle in triangles:
+            uniforms = [projection, view] + triangle.uniforms
+            draw(vao, triangle.vbos[0],
+                 triangle.vertex_attributes, uniforms, shader, self.texture)
+
+        triangles = [
+            Mesh([array_buffer(
+                list(map(float, [
+                    10, 10, 0, 1, 1,
+                    -10, -10, 0, 0, 0,
+                    10, -10, 0, 1, 0,
+                    10, 10, 0, 1, 1,
+                    -10, 10, 0, 0, 1,
+                    -10, -10, 0, 0, 0,
+                ])), 5)],
+                [VertexAttribute('a_Position', 3, 5, 0),
+                 VertexAttribute('a_UV', 2, 5, 3)],
+                [Uniform("u_TextureSampler", 0), Uniform("u_Model", identity())]),
         ]
 
         vao = VAO()
