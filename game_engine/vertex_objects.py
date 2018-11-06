@@ -31,6 +31,7 @@ class VBO:
         glBindBuffer(self.type, 0)
 
     def upload(self, usage=GL_STATIC_DRAW):
+        glBindBuffer(self.type, self.handle)
         data_gl = (self.data_type * len(self.data))(*self.data)
         size = sizeof(data_gl)
         glBufferData(self.type, size, data_gl, usage)
@@ -77,11 +78,11 @@ class VertexAttribute:
     def bind(self, location: int, shader: Shader):
         stride = self.stride * sizeof(GLfloat)
         offset = self.offset * sizeof(GLfloat)
+        glEnableVertexAttribArray(location)
         glVertexAttribPointer(location, self.vertex_size,
                               GL_FLOAT, GL_FALSE, stride, offset)
         glBindAttribLocation(shader.handle, location,
                              bytes(self.name, "utf-8"))
-        glEnableVertexAttribArray(location)
 
 
 class Uniform:

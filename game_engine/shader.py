@@ -139,11 +139,8 @@ class Shader:
         # check there are 1-4 values
         if len(vals) in range(1, 5):
             c_vals = list(map(c_float, vals))
-            # location = glGetUniformLocation(
-            #     self.handle, c_char_p(name.encode("utf-8")))
             location = glGetUniformLocation(
                 self.handle, bytes(name, "utf-8"))
-            # select the correct function
             uniform_functions = {
                 1: glUniform1f,
                 2: glUniform2f,
@@ -171,8 +168,8 @@ class Shader:
         # as well as euclid matrices
         # obtain the uniform location
         location = glGetUniformLocation(
-            self.handle, c_char_p(name.encode("utf-8")))
+            self.handle, bytes(name, "utf-8"))
         # upload the 4x4 floating point matrix
-        mat_values = mat.to_list()
+        mat_values = (c_float * 16)(*mat.to_list())
         # noinspection PyCallingNonCallable, PyTypeChecker
-        glUniformMatrix4fv(location, 1, True, (c_float * 16)(*mat_values))
+        glUniformMatrix4fv(location, 1, True, mat_values)

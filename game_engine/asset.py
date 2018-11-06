@@ -19,15 +19,25 @@ LOG = logging.getLogger()
 class Texture:
     def __init__(self, image, f, t):
         self.image = image
-        self.width = image.shape[1]
-        self.height = image.shape[0]
         self.format = f
         self.type = t
         self.uploaded = False
         self.handle = GLuint()
         glGenTextures(1, self.handle)
 
+    @property
+    def image(self):
+        return self._image
+
+    @image.setter
+    def image(self, value):
+        self._image = value
+        self.width = value.shape[1]
+        self.height = value.shape[0]
+        self.uploaded = False
+
     def upload(self):
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.handle)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -49,13 +59,17 @@ class Texture:
         glBindTexture(GL_TEXTURE_2D, 0)
 
 
-def load_image(file_name: str):
+def load_image_from_mat(mat):
+    img = cv2.flip(mat, 0)
+    return Texture(img, GL_BGR, GL_UNSIGNED_BYTE)
+
+
+def load_image_from_file(file_name: str):
     img = cv2.imread(file_name, cv2.IMREAD_COLOR)
     if img is None:
         LOG.error(f"Could not load image {file_name}")
         return None
-    img = cv2.flip(img, 0)
-    return Texture(img, GL_BGR, GL_UNSIGNED_BYTE)
+    return load_image_from_mat(img)
 
 
 def get_current_directory():
@@ -71,21 +85,29 @@ class MeshSurface:
         self.vertex_attributes = vertex_attributes
         self.uniforms = uniforms
         self.vao = VAO()
+        self.is_setup = False
 
-    def draw(self, uniforms: List[Uniform]):
+    def setup(self):
         self.shader.bind()
         self.vao.bind()
         self.vertex_buffer.bind()
 
+        for index, attrib in enumerate(self.vertex_attributes):
+            attrib.bind(index, self.shader)
+        self.is_setup = True
+
+    def draw(self, uniforms: List[Uniform]):
+        if not self.is_setup:
+            self.setup()
+
+        self.shader.bind()
+        self.vao.bind()
+
         for uniform in self.uniforms + uniforms:
             uniform.bind(self.shader)
 
-        for index, attrib in enumerate(self.vertex_attributes):
-            attrib.bind(index, self.shader)
-
         glDrawArrays(GL_TRIANGLES, 0, len(self.vertex_buffer))
 
-        self.vertex_buffer.unbind()
         self.vao.unbind()
         self.shader.unbind()
 
