@@ -4,6 +4,9 @@ from game_engine.math import vec2, identity
 
 
 class BaseGame:
+    def init(self):
+        pass
+
     def update(self, delta: float):
         pass
 

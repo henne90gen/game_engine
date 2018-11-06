@@ -1,5 +1,6 @@
 import logging
-import os, inspect
+import os
+import inspect
 from typing import List
 
 import cv2
@@ -57,6 +58,10 @@ def load_image(file_name: str):
     return Texture(img, GL_BGR, GL_UNSIGNED_BYTE)
 
 
+def get_current_directory():
+    return os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+
 TEXTURE_MESH_SHADER = None
 COLOR_MESH_SHADER = None
 
@@ -67,12 +72,12 @@ class MeshSurface:
         self.uniforms = uniforms
         self.vao = VAO()
 
-    def draw(self, additional_uniforms):
+    def draw(self, uniforms: List[Uniform]):
         self.shader.bind()
         self.vao.bind()
         self.vertex_buffer.bind()
 
-        for uniform in self.uniforms + additional_uniforms:
+        for uniform in self.uniforms + uniforms:
             uniform.bind(self.shader)
 
         for index, attrib in enumerate(self.vertex_attributes):
@@ -99,9 +104,9 @@ class ColorMeshSurface(MeshSurface):
 
         global COLOR_MESH_SHADER
         if COLOR_MESH_SHADER is None:
-            dir_name = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            dir_name = get_current_directory()
             COLOR_MESH_SHADER = Shader(
-                "game_engine/color.vert", "game_engine/color.frag")
+                f"{dir_name}/color.vert", f"{dir_name}/color.frag")
             LOG.info("Loaded color mesh shader")
         self.shader = COLOR_MESH_SHADER
 
@@ -110,8 +115,7 @@ class TextureMeshSurface(MeshSurface):
     def __init__(self, points: List[vec3], uvs: List[vec2], texture: Texture):
         attributes = [VertexAttribute('a_Position', 3, 5, 0),
                       VertexAttribute('a_UV', 2, 5, 3)]
-        uniforms = [Uniform("u_TextureSampler", 0),
-                    Uniform("u_Model", identity())]
+        uniforms = [Uniform("u_TextureSampler", 0)]
         super().__init__(attributes, uniforms)
         data = []
         for point, uv in zip(points, uvs):
@@ -122,7 +126,7 @@ class TextureMeshSurface(MeshSurface):
 
         global TEXTURE_MESH_SHADER
         if TEXTURE_MESH_SHADER is None:
-            dir_name = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            dir_name = get_current_directory()
             TEXTURE_MESH_SHADER = Shader(
                 f"{dir_name}/texture.vert", f"{dir_name}/texture.frag")
             LOG.info("Loaded texture mesh shader")
@@ -130,5 +134,9 @@ class TextureMeshSurface(MeshSurface):
 
     def draw(self, additional_uniforms):
         self.texture.bind()
+        found_model = list(
+            filter(lambda u: u.name == "u_Model", additional_uniforms))
+        if not found_model:
+            additional_uniforms.append(Uniform("u_Model", identity()))
         super().draw(additional_uniforms)
         self.texture.unbind()

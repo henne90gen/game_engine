@@ -11,6 +11,7 @@ from game_engine.shader import Shader
 
 LOG = logging.getLogger()
 
+
 class VBO:
     def __init__(self, buffer_type, nums_per_vertex, data, data_type):
         self.type = buffer_type
@@ -58,6 +59,12 @@ class VAO:
     @staticmethod
     def unbind():
         glBindVertexArray(0)
+
+    def __repr__(self):
+        return f"VAO({self.handle})"
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class VertexAttribute:

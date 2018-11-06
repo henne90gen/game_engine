@@ -30,6 +30,7 @@ class Window(pyglet.window.Window):
         if game is None:
             game = BaseGame()
         self.game = game
+        self.game.init()
 
         if data is None:
             data = BaseData()
