@@ -2,16 +2,19 @@ import logging
 import os
 import inspect
 from typing import List
+import ctypes
 
 import cv2
 import numpy as np
 from pyglet.gl import glGenTextures, glBindTexture, glTexParameterf, glTexImage2D, GLuint, GL_BGR, GL_RGB, GL_UNSIGNED_BYTE, GL_BYTE
-from pyglet.gl import GL_RGBA, GL_RGB8, glFlush, glDrawArrays, GL_TRIANGLES
+from pyglet.gl import GL_RGBA, GL_RGB8, glFlush, glDrawArrays, GL_TRIANGLES, glGenBuffers, glBindBuffer, GL_PIXEL_UNPACK_BUFFER
 from pyglet.gl import GL_TEXTURE_2D, glActiveTexture, GL_TEXTURE0, GL_TEXTURE_MAG_FILTER, GL_TEXTURE_MIN_FILTER, GL_LINEAR, GLubyte
+from pyglet.gl import glBufferData, GL_STREAM_DRAW, glTexSubImage2D, GL_WRITE_ONLY, glMapBuffer, glUnmapBuffer, glPixelStorei, GL_UNPACK_ALIGNMENT
 
 from game_engine.shader import Shader
 from game_engine.vertex_objects import VBO, VAO, VertexAttribute, Uniform, array_buffer
 from game_engine.math import vec3, vec2, identity
+from game_engine.helper import timer
 
 LOG = logging.getLogger()
 
@@ -24,6 +27,9 @@ class Texture:
         self.uploaded = False
         self.handle = GLuint()
         glGenTextures(1, self.handle)
+        glBindTexture(GL_TEXTURE_2D, self.handle)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
     @property
     def image(self):
@@ -39,8 +45,6 @@ class Texture:
     def upload(self):
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.handle)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
         texture_data = bytes(self.image.flat)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, self.width,

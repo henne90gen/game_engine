@@ -3,10 +3,10 @@ import threading
 from typing import List
 import cv2
 import numpy as np
-from pyglet.gl import GL_ARRAY_BUFFER
 
 import game_engine.window
 import game_engine.game
+from game_engine.helper import timer
 from game_engine.camera import Camera
 from game_engine.shader import Shader
 from game_engine.vertex_objects import VAO, array_buffer, VertexAttribute, Uniform
@@ -38,27 +38,32 @@ def to_vec2_arr(arr):
     return to_vec_arr(arr, 2)
 
 
+def get_points_and_uvs(width: int, height: int):
+    width_half = width / height * 10.0 / 2.0
+    height_half = 10.0 / 2.0
+    points = to_vec3_arr([
+        width_half, height_half, 0,
+        -width_half, -height_half, 0,
+        width_half, -height_half, 0,
+        width_half, height_half, 0,
+        -width_half, height_half, 0,
+        -width_half, -height_half, 0,
+    ])
+    uvs = to_vec2_arr([
+        1, 1,
+        0, 0,
+        1, 0,
+        1, 1,
+        0, 1,
+        0, 0,
+    ])
+    return points, uvs
+
+
 class Image:
     def __init__(self, path):
         texture = load_image_from_file(path)
-        width_half = texture.width / texture.height * 10.0 / 2.0
-        height_half = 10.0 / 2.0
-        points = to_vec3_arr([
-            width_half, height_half, 0,
-            -width_half, -height_half, 0,
-            width_half, -height_half, 0,
-            width_half, height_half, 0,
-            -width_half, height_half, 0,
-            -width_half, -height_half, 0,
-        ])
-        uvs = to_vec2_arr([
-            1, 1,
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 1,
-            0, 0,
-        ])
+        points, uvs = get_points_and_uvs(texture.width, texture.height)
         self.surface = TextureMeshSurface(points, uvs, texture)
         self.model_matrix = identity()
 
@@ -70,37 +75,21 @@ class Image:
 class Video:
     def __init__(self):
         self.video = cv2.VideoCapture(0)
-        ret, self.next_frame = self.video.read()
-        self.next_frame = cv2.flip(self.next_frame, -1)
-        self.next_frame = cv2.resize(self.next_frame, (0, 0), fx=0.5, fy=0.5)
+        self.get_next_frame(True)
 
         texture = load_image_from_mat(self.next_frame)
-        width_half = texture.width / texture.height * 10.0 / 2.0
-        height_half = 10.0 / 2.0
-        points = to_vec3_arr([
-            width_half, height_half, 0,
-            -width_half, -height_half, 0,
-            width_half, -height_half, 0,
-            width_half, height_half, 0,
-            -width_half, height_half, 0,
-            -width_half, -height_half, 0,
-        ])
-        uvs = to_vec2_arr([
-            1, 1,
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 1,
-            0, 0,
-        ])
+        points, uvs = get_points_and_uvs(texture.width, texture.height)
         self.surface = TextureMeshSurface(points, uvs, texture)
 
-    def draw(self, uniforms: List[Uniform]):
+    def get_next_frame(self, init=False):
         ret, self.next_frame = self.video.read()
         self.next_frame = cv2.flip(self.next_frame, -1)
-        self.next_frame = cv2.resize(self.next_frame, (0, 0), fx=0.5, fy=0.5)
+        self.next_frame = cv2.resize(self.next_frame, (0, 0), fx=0.75, fy=0.75)
+        if not init:
+            self.surface.texture.image = self.next_frame
 
-        self.surface.texture.image = self.next_frame
+    def draw(self, uniforms: List[Uniform]):
+        self.get_next_frame()
         self.model_matrix = identity()
 
         uniforms.append(Uniform("u_Model", self.model_matrix))
