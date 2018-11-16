@@ -48,6 +48,12 @@ class Window(pyglet.window.Window):
             self.start_time = end
             self.num_frames = 0
 
+    def update_game_data(self, frame_time):
+        self.data.window.width = self.width
+        self.data.window.height = self.height
+        self.data.frame_time = frame_time
+        self.data.projection_matrix = self.projection_matrix
+
     def on_draw(self, *args):
         end = datetime.now()
         frame_time = (end - self.frame_start_time).total_seconds()
@@ -55,8 +61,8 @@ class Window(pyglet.window.Window):
 
         self.clear()
 
-        self.data.frame_time = frame_time
-        self.data.projection_matrix = self.projection_matrix
+        self.update_game_data(frame_time)
+
         self.game.update(self.data)
         self.game.render(self.data)
 
@@ -98,14 +104,14 @@ class Window(pyglet.window.Window):
         ])
 
     def on_key_press(self, symbol, modifiers):
-        self.data.key_map[symbol] = True
+        self.data.keyboard.keys[symbol] = True
 
     def on_key_release(self, symbol, modifiers):
-        self.data.key_map[symbol] = False
+        self.data.keyboard.keys[symbol] = False
 
     def on_mouse_motion(self, x, y, dx, dy):
-        self.data.mouse_movement = vec2(dx, dy)
-        self.data.mouse_position = vec2(x, y)
+        self.data.mouse.position = vec2(x, y)
+        self.data.mouse.movement = vec2(dx, dy)
 
 
 def run_game(name: str, game: BaseGame, data: BaseData):

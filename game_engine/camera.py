@@ -17,14 +17,14 @@ class Camera:
 
     def update(self, data: BaseData) -> None:
         move = vec2()
-        if data.key_map[key.LEFT] and not data.key_map[key.RIGHT]:
+        if data.keyboard.keys[key.LEFT] and not data.keyboard.keys[key.RIGHT]:
             move.x = -1
-        elif data.key_map[key.RIGHT] and not data.key_map[key.LEFT]:
+        elif data.keyboard.keys[key.RIGHT] and not data.keyboard.keys[key.LEFT]:
             move.x = 1
 
-        if data.key_map[key.DOWN] and not data.key_map[key.UP]:
+        if data.keyboard.keys[key.DOWN] and not data.keyboard.keys[key.UP]:
             move.y = -1
-        elif data.key_map[key.UP] and not data.key_map[key.DOWN]:
+        elif data.keyboard.keys[key.UP] and not data.keyboard.keys[key.DOWN]:
             move.y = 1
 
         move_speed = 0.5
@@ -32,9 +32,9 @@ class Camera:
         self.position.y += move.y * move_speed
 
         horizontal_rotation = 0
-        if data.key_map[key.Q] and not data.key_map[key.E]:
+        if data.keyboard.keys[key.Q] and not data.keyboard.keys[key.E]:
             horizontal_rotation = -1
-        elif data.key_map[key.E] and not data.key_map[key.Q]:
+        elif data.keyboard.keys[key.E] and not data.keyboard.keys[key.Q]:
             horizontal_rotation = 1
 
         rotation_speed = 1
